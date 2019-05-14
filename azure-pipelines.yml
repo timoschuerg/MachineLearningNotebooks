@@ -9,13 +9,13 @@ steps:
 - task: AzureCLI@1
   displayName: 'Install the CLI'
   inputs:
-    azureSubscription: 'd4ac9d34-5255-4583-9a9b-deffeee733dc'
+    azureSubscription: 'RunPipelineServiceConnection'
     scriptLocation: inlineScript
     inlineScript: 'az extension add -n azure-cli-ml'
 
 - task: AzureCLI@1
   displayName: 'Attach folder to workspace'
   inputs:
-    azureSubscription: 'd4ac9d34-5255-4583-9a9b-deffeee733dc'
+    azureSubscription: 'RunPipelineServiceConnection'
     scriptLocation: inlineScript
     inlineScript: 'az ml run submit-pipeline --pipeline-id "0f17e078-1de5-45e4-ac71-410f3d0f5669" --resource-group "sc-m-eu-sb-rgp-003" --workspace-name "sc-m-eu-sb-mlws-002"'
