@@ -1,19 +1,56 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - master
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'Ubuntu-16.04'
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- task: AzureCLI@1
+  displayName: 'Install the CLI'
+  inputs:
+    azureSubscription: 'build-demo'
+    scriptLocation: inlineScript
+    inlineScript: 'az extension add -n azure-cli-ml'
+
+- task: AzureCLI@1
+  displayName: 'Attach folder to workspace'
+  inputs:
+    azureSubscription: 'build-demo'
+    scriptLocation: inlineScript
+    inlineScript: 'az ml folder attach -w build-2019-demo -g scottgu-all-hands'
+
+- task: AzureCLI@1
+  displayName: 'Create compute for training'
+  inputs:
+    azureSubscription: 'build-demo'
+    scriptLocation: inlineScript
+    inlineScript: 'az ml computetarget create amlcompute -n cpu --vm-size STANDARD_D2_V2 --max-nodes 4'
+  
+- task: AzureCLI@1
+  displayName: 'Submit script run'
+  inputs:
+    azureSubscription: 'build-demo'
+    scriptLocation: inlineScript
+    inlineScript: 'az ml run submit-script -c sklearn -e test -d myenv.yml train.py'
+
+- task: AzureCLI@1
+  displayName: 'Register model'
+  inputs:
+    azureSubscription: 'build-demo'
+    scriptLocation: inlineScript
+    inlineScript: 'az ml model register -n mymodel -p sklearn_regression_model.pkl -t model.json'
+
+- task: AzureCLI@1
+  displayName: 'Deploy model'
+  inputs:
+    azureSubscription: 'build-demo'
+    scriptLocation: inlineScript
+    inlineScript: 'az ml model deploy -n acicicd -f model.json --ic inferenceConfig.yml --dc deploymentConfig.yml --overwrite'
+
+- task: AzureCLI@1
+  displayName: 'Delete deployed service'
+  inputs:
+    azureSubscription: 'build-demo'
+    scriptLocation: inlineScript
+    inlineScript: 'az ml service delete -n acicicd'
